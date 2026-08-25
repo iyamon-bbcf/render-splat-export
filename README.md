@@ -4,6 +4,8 @@ A Blender addon that exports camera poses and a depth-based point cloud from you
 
 Ground-truth camera poses from Blender are more accurate than anything SfM would estimate from rendered images — so if you already know exactly where your cameras are, there's no reason to make COLMAP re-derive it.
 
+![The loop this addon removes: an exact camera pose is rendered away, then re-estimated by structure-from-motion at the cost of GPU time, arriving back at the same camera slightly less accurate](docs/why-skip-sfm.svg)
+
 ## Why this exists
 
 Most Gaussian Splat pipelines assume you're starting from real-world photos with unknown camera positions, which is what COLMAP's structure-from-motion step is for. If you're rendering from Blender, you already have exact camera transforms — running SfM on synthetic renders is redundant and can even introduce error versus your ground truth.
