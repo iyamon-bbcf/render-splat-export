@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="228" height="46" viewBox="0 0 228 46" role="img" aria-label="Get it on Gumroad">
+  <rect x="0.75" y="0.75" width="226.5" height="44.5" rx="9" fill="#ff90e8" stroke="#12151c" stroke-width="1.5"/>
+  <g transform="translate(20,11)">
+    <circle cx="12" cy="12" r="11.2" fill="none" stroke="#12151c" stroke-width="2.2"/>
+    <path d="M17.4 8.6a6.4 6.4 0 1 0 .9 6.6h-5.1v-2.7h7.4v6.4h-2.2v-1.9" fill="none" stroke="#12151c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="56" y="29.5" fill="#12151c" font-family="'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif" font-size="16" font-weight="650" letter-spacing="0.2">Get it on Gumroad</text>
+</svg>

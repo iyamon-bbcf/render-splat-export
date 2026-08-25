@@ -66,9 +66,11 @@ If your setup differs — fixed camera objects instead of marker switching, or v
 
 ## Support
 
-This is free and MIT-licensed, and it stays that way. If it saved you a COLMAP solve, you can throw something in the hat:
+This is free and MIT-licensed, and it stays that way. If it saved you a COLMAP solve and you want to help me hunt down the next bit of redundant pipeline work, you can chip in:
 
-[![Sponsor this project](docs/sponsor-button.svg)](https://github.com/sponsors/iyamon-bbcf)
+[![Get it on Gumroad](docs/gumroad-button.svg)](https://aaaaaaaaaaaaaf.gumroad.com/l/vvjxp) [![Sponsor this project](docs/sponsor-button.svg)](https://github.com/sponsors/iyamon-bbcf)
+
+The Gumroad listing is pay-what-you-want with a $0 minimum — same files, take it for free if you like.
 
 ## License
 
