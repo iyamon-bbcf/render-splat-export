@@ -10,6 +10,8 @@ Ground-truth camera poses from Blender are more accurate than anything SfM would
 
 Most Gaussian Splat pipelines assume you're starting from real-world photos with unknown camera positions, which is what COLMAP's structure-from-motion step is for. If you're rendering from Blender, you already have exact camera transforms — running SfM on synthetic renders is redundant and can even introduce error versus your ground truth.
 
+<img src="docs/camera-confused.png" width="420" alt="A camera on a tripod beside a baffled face surrounded by red question marks">
+
 This addon handles the two things you actually need instead:
 
 1. **Getting your known poses into a format trainers understand**, including the axis-convention conversion (Blender is Z-up; COLMAP/OpenCV expects Y-down, Z-forward) that trips people up.
