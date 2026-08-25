@@ -22,3 +22,6 @@ desktop.ini
 .DS_Store
 .vscode/
 .idea/
+
+# Build output — release zips are uploaded, not committed
+dist/
