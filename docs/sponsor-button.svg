@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="228" height="46" viewBox="0 0 228 46" role="img" aria-label="Sponsor this project">
+  <rect x="0.75" y="0.75" width="226.5" height="44.5" rx="9" fill="#db61a2" stroke="#b34a84" stroke-width="1.5"/>
+  <path d="M20.6 15.9c2.1-2.1 5.4-2.1 7.4 0l.9.9.9-.9c2.1-2.1 5.4-2.1 7.4 0 2.1 2.1 2.1 5.4 0 7.5l-7.6 7.7c-.4.4-1 .4-1.4 0l-7.6-7.7c-2.1-2.1-2.1-5.4 0-7.5z" fill="#ffffff"/>
+  <text x="52" y="29.5" fill="#ffffff" font-family="'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif" font-size="16" font-weight="650" letter-spacing="0.2">Sponsor this project</text>
+</svg>

@@ -64,6 +64,12 @@ If your setup differs — fixed camera objects instead of marker switching, or v
 * The COLMAP export includes `rigs.txt`/`frames.txt` (COLMAP 4.x's rig/frame schema) alongside the classic three files. This was required for a local COLMAP 4.1 dev build's `model_analyzer` to accept the export; it's untested whether every downstream trainer reads or ignores these two extra files. Tested working with Postshot.
 * Point cloud generation processes one full frame at a time and can take a while for large frame counts — a progress log file (`pointcloud_progress.log`) is written to the output folder so you can check it's still running without needing Blender's System Console open.
 
+## Support
+
+This is free and MIT-licensed, and it stays that way. If it saved you a COLMAP solve, you can throw something in the hat:
+
+[![Sponsor this project](docs/sponsor-button.svg)](https://github.com/sponsors/iyamon-bbcf)
+
 ## License
 
 MIT — do whatever you want with it.
