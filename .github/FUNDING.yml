@@ -1,0 +1,6 @@
+# Shows a "Sponsor" button on the repo.
+# The github: entry only renders once GitHub Sponsors enrollment is complete.
+github: [iyamon-bbcf]
+
+# Uncomment and fill in once the Gumroad listing exists:
+# custom: ["https://iyamon.gumroad.com/l/render-splat-export"]
