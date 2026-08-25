@@ -1,0 +1,24 @@
+# Blender
+*.blend1
+*.blend2
+*.blend@
+
+# Pipeline output — never commit render data or generated exports
+splat_export/
+frames/
+colmap_export/
+transforms.json
+points.ply
+pointcloud_progress.log
+*.exr
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
