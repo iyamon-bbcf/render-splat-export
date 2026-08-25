@@ -1,87 +1,69 @@
 # Splat Export Pipeline
 
-A single-file Blender addon that prepares a scene for **Gaussian Splat training** by exporting ground-truth camera poses and a depth-derived point cloud, then converting both to COLMAP format.
+A Blender addon that exports camera poses and a depth-based point cloud from your scene, then converts everything to COLMAP format — ready to drop straight into [Postshot](https://www.jawset.com/) or [LichtFeld Studio](https://github.com/MrNeRF/LichtFeld-Studio) for Gaussian Splat training, skipping their built-in structure-from-motion step entirely.
 
-The point is to **skip Structure-from-Motion entirely**. Blender already knows exactly where every camera is. Letting Postshot or COLMAP re-estimate those poses from rendered images throws away perfect data and re-derives it worse.
+Ground-truth camera poses from Blender are more accurate than anything SfM would estimate from rendered images — so if you already know exactly where your cameras are, there's no reason to make COLMAP re-derive it.
 
-Tested end-to-end into [Postshot](https://www.jawset.com/); should work unmodified with [LichtFeld Studio](https://github.com/MrNeRF/LichtFeld-Studio) (untested).
+## Why this exists
 
----
+Most Gaussian Splat pipelines assume you're starting from real-world photos with unknown camera positions, which is what COLMAP's structure-from-motion step is for. If you're rendering from Blender, you already have exact camera transforms — running SfM on synthetic renders is redundant and can even introduce error versus your ground truth.
 
-## Install
+This addon handles the two things you actually need instead:
 
-**Edit > Preferences > Add-ons > Install...** → select `splat_export_pipeline.py` → tick the checkbox.
+1. **Getting your known poses into a format trainers understand**, including the axis-convention conversion (Blender is Z-up; COLMAP/OpenCV expects Y-down, Z-forward) that trips people up.
+2. **Generating an initial point cloud from a depth pass**, since skipping SfM means skipping its sparse point cloud output too — most trainers fall back to random initialization without one, which converges slower and less cleanly.
 
-The panel appears in the 3D Viewport sidebar (press <kbd>N</kbd>) under **Splat Export**.
+## Features
 
-To try it without installing: open the file in the Scripting tab and hit **Run Script**. Same panel, just doesn't persist.
+* **One panel, one Output Folder field.** Every step reads/writes from the same location — no retyping paths into five different scripts.
+* **Marker-bound multi-camera support.** Built for a single timeline where the active camera switches via bound markers (`Marker > Bind Camera to Markers`), with the camera free to move within its own block of frames — not just fixed switch points.
+* **Depth-based point cloud init**, read natively via `bpy.data.images.load()` — no external `OpenEXR` pip dependency, which is notoriously painful to install into Blender's bundled Python.
+* **One-click COLMAP export**, including the newer COLMAP 4.x rig/frame schema some installs require, alongside the classic three files.
+* **Built-in COLMAP validation** — runs `colmap model_analyzer` directly from the panel and dumps the full output to a Blender text block.
+* **Render-farm friendly.** Designed so a Deadline (or similar) farm render just works normally — marker-based camera switching resolves automatically per frame during a standard farm render, no custom per-task script needed.
 
-**Requires** `numpy`, which ships with Blender. No `pip install` needed — depth EXRs are read through Blender's own image loader specifically to avoid the OpenEXR Python wheel, which is painful to install into Blender's bundled interpreter.
+## Requirements
 
----
+* Blender 4.x or 5.x (tested on 5.x — the compositor setup step supports both the legacy `scene.node_tree` API and the newer node-group-based compositor)
+* [COLMAP](https://colmap.github.io/) installed locally, if you want to use the validation step (optional — export still works without it)
+* A Gaussian Splat trainer that accepts COLMAP-format input, e.g. [Postshot](https://www.jawset.com/) or [LichtFeld Studio](https://github.com/MrNeRF/LichtFeld-Studio)
 
-## What your scene needs
+## Installation
 
-These assumptions are load-bearing. The addon will not work correctly without them:
+1. Download `splat_export_pipeline.py`
+2. In Blender: **Edit > Preferences > Add-ons > Install...**, select the file, enable the checkbox
+3. Open the **Splat Export** tab in the 3D Viewport sidebar (press `N`)
 
-- **One timeline.** Not separate camera objects on their own frame loops.
-- **Cameras switched by bound markers** — `Marker > Bind Camera to Markers`. The addon relies on Blender resolving the active camera per frame; it does not read `scene.camera` shot by shot.
-- **All cameras share one focal length and sensor size.** A single `camera_angle_x` is written for the whole export. Per-frame intrinsics are not supported.
-- **You render separately.** This addon exports data; it does not render. Submit to your farm (Deadline, etc.) with the same Frame Start/End/Step shown in the panel.
+Alternatively, paste the file into a new text block in Blender's Scripting tab and click **Run Script** — the panel appears the same way, it just won't persist after closing the file.
 
-The reference setup it was built against: 2000 frames, 5 cameras in 400-frame blocks, cameras animated within each block.
+## Scene setup this expects
 
----
+* A single timeline, not separate camera objects rendered in a loop
+* Cameras switched via markers bound to camera objects (`Marker > Bind Camera to Markers`), not `scene.camera` set manually per shot
+* All cameras sharing the same focal length and sensor size (one shared set of intrinsics)
+
+If your setup differs — fixed camera objects instead of marker switching, or varying intrinsics per camera — the pose export logic will need adjusting. Feel free to open an issue.
 
 ## Usage
 
-Run in order. Steps 1–2 before rendering, steps 3–5 after.
+1. **Export Camera Poses** — reads Frame Start/End/Step (synced from Output Properties, or set manually in the panel), steps through the range, resolves the active camera per frame via marker binding, and writes `transforms.json`.
+2. **Setup EXR Depth Output** (one-time) — wires a Z-depth output into the compositor without touching your existing color render output.
+3. **Render your scene as normal** (locally or on a farm) — this addon doesn't render anything itself.
+4. **Generate Point Cloud from Depth EXRs** — run after rendering finishes. Unprojects every depth pass to world-space points and writes `points.ply`.
+5. **Export COLMAP Format** — converts `transforms.json` + `points.ply` into a COLMAP-format folder (`cameras.txt`, `rigs.txt`, `frames.txt`, `images.txt`, `points3D.txt`, plus a copied `images/` folder).
+6. **Validate with COLMAP** (optional) — point the panel at your local `colmap.exe` once, then run `model_analyzer` on the export directly from Blender.
+7. Drag the resulting `colmap_export` folder into Postshot or LichtFeld Studio.
 
-| Step | Button | When |
-|---|---|---|
-| 1 | **Export Camera Poses** | Before render → writes `transforms.json` |
-| 2 | **Setup EXR Depth Output** | Before render, once → wires the compositor for Z-depth EXRs |
-| 3 | **Generate Point Cloud** | After render → unprojects depth into `points.ply` |
-| 4 | **Export COLMAP Format** | After step 3 → writes `colmap_export/` + copies images |
-| 5 | **Validate with COLMAP** | Optional sanity check via `colmap model_analyzer` |
+## Known limitations
 
-Then point Postshot / LichtFeld Studio at `colmap_export/` and **skip the SfM step**.
-
-### Notes on individual steps
-
-**Step 2 does not disturb your existing color output.** It checks for the Render Layers → Composite link before touching anything and only adds a File Output node alongside. Works with both the legacy `scene.node_tree` API and Blender 4.x/5.x's node-group compositor.
-
-**Step 3 blocks the UI** for its full runtime with no visible progress bar unless the System Console is open. It writes a live `pointcloud_progress.log` beside the output, rewritten every 10 frames — open that in a text editor to check progress.
-
-**Step 4 writes the COLMAP 4.x five-file schema** (`rigs`, `cameras`, `frames`, `images`, `points3D`). COLMAP 4.1 rejected the classic three-file model outright despite the docs claiming backward compatibility. `rigs.txt` is a trivial single-camera entry — a schema requirement, not a real multi-camera rig. If a future trainer errors on import, try deleting `rigs.txt` and `frames.txt` and keeping the classic three.
-
----
-
-## Settings
-
-| Setting | Default | Notes |
-|---|---|---|
-| Output Folder | `//splat_export/` | Everything else derives from this |
-| Step | 5 | 1 = every frame; 5–10 is usually plenty for splat training |
-| Points Per Frame | 2000 | Subsample cap before merging |
-| Max Total Points | 200,000 | Final cap on the merged cloud |
-| Depth Clip | 1e4 | Depth above this is treated as background and discarded |
-
----
-
-## Contributing
-
-Two things in here look like they could be simplified but should not be:
-
-1. **Depth files are located with one `os.listdir()` and a regex frame table, never `glob.glob()` per frame.** The per-frame version scanned a network drive 400 separate times and hung for hours.
-2. **All five operators call `resolve_output_dir()`.** Path handling was written inline several times and broke every time — including on a Windows case that mangles a relative default into a bare `\\name\` string that is neither valid UNC nor Blender's `//`, and crashes `os.makedirs`.
-
-If you add an operator, call `resolve_output_dir()` rather than handling paths again.
-
----
+* Assumes shared camera intrinsics across all cameras — per-camera intrinsics aren't currently supported.
+* The COLMAP export includes `rigs.txt`/`frames.txt` (COLMAP 4.x's rig/frame schema) alongside the classic three files. This was required for a local COLMAP 4.1 dev build's `model_analyzer` to accept the export; it's untested whether every downstream trainer reads or ignores these two extra files. Tested working with Postshot.
+* Point cloud generation processes one full frame at a time and can take a while for large frame counts — a progress log file (`pointcloud_progress.log`) is written to the output folder so you can check it's still running without needing Blender's System Console open.
 
 ## License
 
-GPL-3.0-or-later. See [LICENSE](LICENSE).
+MIT — do whatever you want with it.
 
-Blender addons that use the `bpy` API are derivative works of Blender and must be GPL-compatible — this is Blender Foundation policy, not a preference. You are free to use, modify, and redistribute this, commercially included.
+## Acknowledgments
+
+Inspired by [skysplat_blender](https://github.com/kyjohnso/skysplat_blender).
