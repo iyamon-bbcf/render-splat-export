@@ -7,7 +7,7 @@ where the active camera switches via bound markers (Marker > Bind Camera to Mark
 
   1. Export Camera Poses  -> transforms.json
   2. Setup EXR Depth Output (one-time compositor wiring, doesn't touch color output)
-  3. Generate Point Cloud  -> points.ply (run AFTER Deadline has rendered color+depth)
+  3. Generate Point Cloud  -> points.ply (run AFTER your render has produced color+depth)
 
 INSTALL:
   Edit > Preferences > Add-ons > Install... > select this file > enable checkbox.
@@ -18,8 +18,8 @@ OR RUN DIRECTLY:
   just won't persist after closing the file.
 
 WHAT IT DOES NOT DO:
-  - Doesn't render anything -- submit to Deadline separately with the same
-    Frame Start/End/Step shown in this panel, using your normal Blender submitter.
+  - Doesn't render anything -- render separately (locally or on a farm such as
+    Deadline) with the same Frame Start/End/Step shown in this panel.
 """
 
 import bpy
@@ -35,7 +35,7 @@ bl_info = {
     "name": "Splat Export Pipeline",
     "author": "iyamon-bbcf",
     "version": (2, 0),
-    "blender": (3, 0, 0),
+    "blender": (4, 0, 0),
     "location": "View3D > Sidebar > Splat Export",
     "description": "Export camera poses, set up depth output, and build a point cloud for Gaussian Splat training",
     "category": "Import-Export",
@@ -258,7 +258,7 @@ class SPLAT_OT_setup_depth_output(bpy.types.Operator):
         except AttributeError:
             pass
 
-        self.report({'INFO'}, "Depth EXR output configured. Save the file, then submit to Deadline as normal.")
+        self.report({'INFO'}, "Depth EXR output configured. Save the file, then render as normal.")
         return {'FINISHED'}
 
 
@@ -267,8 +267,8 @@ class SPLAT_OT_generate_pointcloud(bpy.types.Operator):
     bl_label = "Generate Point Cloud from Depth EXRs"
     bl_description = (
         "Reads transforms.json + every matching rendered depth EXR, unprojects each to "
-        "world-space points, merges them, and writes points.ply. Run this AFTER Deadline "
-        "has finished rendering."
+        "world-space points, merges them, and writes points.ply. Run this AFTER "
+        "rendering has finished."
     )
 
     @staticmethod
@@ -382,7 +382,7 @@ class SPLAT_OT_generate_pointcloud(bpy.types.Operator):
             wm.progress_end()
             write_progress(total, "FAILED: no depth EXRs matched any transforms.json frame.")
             self.report({'ERROR'}, f"No depth EXRs found in {frames_dir} matching any transforms.json frame. "
-                                    f"Has Deadline finished rendering?")
+                                    f"Has rendering finished?")
             return {'CANCELLED'}
 
         wm.progress_end()
@@ -715,7 +715,7 @@ class SPLAT_PT_panel(bpy.types.Panel):
 
         layout.separator()
         box2 = layout.box()
-        box2.label(text="Point Cloud (after Deadline render)")
+        box2.label(text="Point Cloud (after render)")
         box2.prop(props, "points_per_frame")
         box2.prop(props, "max_points_total")
         box2.prop(props, "depth_clip")
